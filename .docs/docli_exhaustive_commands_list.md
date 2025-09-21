@@ -40,7 +40,7 @@ process and create a .docs/spec.md file with your configuration.
 ```
 
 **Functionality:**
-- Copies prompt files (updateDoc.prompt.md, syncDoc.prompt.md) to `.github/prompts/` directory
+- Copies prompt files (updateDoc.prompt.md, syncDoc.prompt.md, refineDoc.prompt.md) to `.github/prompts/` directory
 - Checks for existing `.docs/spec.md` configuration (exits with error if found)
 - Interactive platform selection (Confluence, README)
 - Interactive document configuration collection
@@ -50,7 +50,7 @@ process and create a .docs/spec.md file with your configuration.
 **Interactive Flow:**
 1. Prompt file copying:
    - Creates `.github/prompts/` directory if it doesn't exist
-   - Copies `updateDoc.prompt.md` and `syncDoc.prompt.md` if they don't exist
+   - Copies `updateDoc.prompt.md`, `syncDoc.prompt.md`, and `refineDoc.prompt.md` if they don't exist
 
 2. Platform selection with options:
    - `1` - Confluence
@@ -183,7 +183,8 @@ This file contains the configuration for your documentation synchronization.
 .github/
 └── prompts/
     ├── updateDoc.prompt.md
-    └── syncDoc.prompt.md
+    ├── syncDoc.prompt.md
+    └── refineDoc.prompt.md
 ```
 
 ## Exit Codes

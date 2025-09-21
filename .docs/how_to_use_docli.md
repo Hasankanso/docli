@@ -1,14 +1,44 @@
 # How to Use Docli
 
-Docli is a command-line tool for generating, managing, and working with documentation in various formats. This guide focuses on the main commands you'll use to get started and manage your documentation projects.
+Docli is a command-line tool for setting up documentation synchronization configuration. This guide focuses on the main commands you'll use to configure your documentation projects for future synchronization with platforms like Confluence and README.
 
 ## Overview
 
 Docli helps you:
-- Generate documentation from source code
-- Convert between different documentation formats
-- Manage documentation workflows
-- Create and maintain project documentation
+- Set up documentation synchronization configuration
+- Organize documentation project structure
+- Define target platforms for documentation deployment
+- Manage documentation project workflows
+- **Provide AI-ready prompts for documentation generation** - Docli includes specialized prompt templates that guide AI assistants in creating and maintaining your documentation
+
+## Documentation Prompts
+
+Docli provides specialized AI-ready prompt templates that guide documentation generation and maintenance. These prompts are automatically copied to your project's `.github/prompts/` directory during initialization:
+
+### Available Prompts
+
+- **updateDoc.prompt.md** - Comprehensive documentation generation that analyzes your source code and creates complete documentation based on your configuration
+- **syncDoc.prompt.md** - Creates documentation indexes and README files that reference your existing documentation  
+- **refineDoc.prompt.md** - Quick, targeted refinements to existing documentation based on user feedback without code analysis
+
+### How Prompts Work
+
+These prompt files contain detailed instructions that help AI assistants understand:
+- Your project structure and documentation goals
+- How to analyze source code and extract relevant information
+- What format and style to use for documentation
+- How to organize and cross-reference multiple documents
+- How to maintain consistency across documentation updates
+
+### Using the Prompts
+
+After running `docli init`, you can use these prompts with AI assistants to:
+1. Generate initial documentation from your configured specifications
+2. Keep documentation synchronized with code changes
+3. Create comprehensive README files and documentation indexes
+4. Make quick improvements and refinements to existing docs
+
+The prompts work with your `.docs/spec.md` configuration file to provide context-aware documentation assistance.
 
 ## Main Commands
 
@@ -21,8 +51,8 @@ docli init
 ```
 
 This interactive command will:
-1. Copy prompt files to `.github/prompts/` directory (updateDoc.prompt.md and syncDoc.prompt.md)
-2. Check if a documentation configuration already exists (exits if found)
+1. Copy specialized documentation prompt files to `.github/prompts/` directory (updateDoc.prompt.md, syncDoc.prompt.md, and refineDoc.prompt.md) - these provide AI assistants with detailed instructions for generating, updating, and refining your documentation
+2. Check if a documentation configuration already exists at `.docs/spec.md` (exits if found)
 3. Guide you through selecting target platforms (Confluence, README)
 4. Help you configure documents with names, descriptions, and file/folder sources
 5. Create a `.docs/spec.md` file with your configuration
@@ -33,7 +63,7 @@ You can choose from:
 - **Confluence** - For team wikis and collaborative documentation
 - **README** - For repository documentation
 
-Select platforms by entering numbers separated by commas (e.g., `1,2` for both).
+Select platforms by entering numbers separated by commas (e.g., `1,2` for both). If no input is provided, Confluence is selected by default.
 
 #### Document Configuration
 
@@ -47,8 +77,8 @@ For each document, you'll provide:
 ```
 Welcome to docli initialization!
 This will guide you through setting up your documentation sync configuration.
-📋 Copying needed prompt files...
-✅ Prompt files copied successfully!
+📋 Copying specialized documentation prompt files...
+✅ Documentation prompt files copied successfully to .github/prompts/!
 📋 Which platforms do you want to sync your documentation to?
 1. Confluence
 2. README
@@ -83,7 +113,7 @@ Display the welcome message and available options:
 docli
 ```
 
-This shows a brief welcome message and reminds you to use `--help` for available commands.
+This shows the welcome message: "Welcome to docli! Use --help to see available commands."
 
 View detailed help for any command:
 
@@ -158,10 +188,10 @@ After running `docli init`, your configuration is stored in `.docs/spec.md`. Thi
 
 If you encounter issues:
 
-- **Configuration exists** - If `docli init` reports existing configuration, remove `.docs/spec.md` or the entire `.docs` directory first
-- **Prompt file warnings** - If you see warnings about prompt files, they're non-critical; the init process will continue
+- **Configuration exists** - If `docli init` reports that documentation configuration already exists, you'll see a message with the path to the existing `.docs/spec.md` file. To start fresh, remove the file or entire `.docs` directory first
+- **Prompt file warnings** - If you see warnings about failing to copy prompt files, they're non-critical; the init process will continue
 - **Permission errors** - Ensure you have write permissions in your project directory for both `.docs` and `.github/prompts` directories  
-- **No input provided** - Docli will use sensible defaults (e.g., Confluence as default platform)
+- **No input provided** - Docli will use sensible defaults (e.g., Confluence as default platform, empty string handling)
 
 ## Next Steps
 

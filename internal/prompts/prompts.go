@@ -1,13 +1,31 @@
 package prompts
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
+
+// GitHubFile represents a file in a GitHub directory
+type GitHubFile struct {
+	Name        string `json:"name"`
+	Path        string `json:"path"`
+	Type        string `json:"type"`
+	DownloadURL string `json:"download_url"`
+}
+
+// GitHubFileContent represents the content of a file from GitHub API
+type GitHubFileContent struct {
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	Content  string `json:"content"`
+	Encoding string `json:"encoding"`
+}
 
 func CopyPromptFiles() error {
 	// Create .github/prompts directory if it doesn't exist
@@ -19,68 +37,108 @@ func CopyPromptFiles() error {
 
 	// GitHub repository information
 	const (
-		baseURL = "https://raw.githubusercontent.com/Hasankanso/docli/main"
+		apiURL = "https://api.github.com/repos/Hasankanso/docli/contents/.github/prompts"
 	)
 
-	// Copy syncDoc.prompt.md if it doesn't exist
-	syncDocPath := filepath.Join(promptsDir, "syncDoc.prompt.md")
-	if _, err := os.Stat(syncDocPath); os.IsNotExist(err) {
-		syncDocURL := baseURL + "/.github/prompts/syncDoc.prompt.md"
-		err = fetchFileFromGit(syncDocURL, syncDocPath)
-		if err != nil {
-			return fmt.Errorf("failed to fetch syncDoc.prompt.md: %w", err)
-		}
-		fmt.Println("✅ Created .github/prompts/syncDoc.prompt.md")
+	// Get list of all prompt files from GitHub
+	promptFiles, err := getPromptFilesFromGitHub(apiURL)
+	if err != nil {
+		return fmt.Errorf("failed to get prompt files list: %w", err)
 	}
 
-	// Copy updateDoc.prompt.md if it doesn't exist
-	updateDocPath := filepath.Join(promptsDir, "updateDoc.prompt.md")
-	if _, err := os.Stat(updateDocPath); os.IsNotExist(err) {
-		updateDocURL := baseURL + "/.github/prompts/updateDoc.prompt.md"
-		err = fetchFileFromGit(updateDocURL, updateDocPath)
-		if err != nil {
-			return fmt.Errorf("failed to fetch updateDoc.prompt.md: %w", err)
+	// Copy each prompt file if it doesn't exist locally
+	for _, file := range promptFiles {
+		// Only process .prompt.md files
+		if !strings.HasSuffix(file.Name, ".prompt.md") {
+			continue
 		}
-		fmt.Println("✅ Created .github/prompts/updateDoc.prompt.md")
+
+		localPath := filepath.Join(promptsDir, file.Name)
+		if _, err := os.Stat(localPath); os.IsNotExist(err) {
+			err = fetchFileContentFromGitHub(file.Path, localPath)
+			if err != nil {
+				return fmt.Errorf("failed to fetch %s: %w", file.Name, err)
+			}
+			fmt.Printf("✅ Created .github/prompts/%s\n", file.Name)
+		}
 	}
 
 	return nil
 }
 
-func fetchFileFromGit(url, destPath string) error {
+func getPromptFilesFromGitHub(apiURL string) ([]GitHubFile, error) {
 	// Create HTTP client with timeout
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
-	// Make the HTTP request
-	resp, err := client.Get(url)
+	// Make the HTTP request to GitHub API
+	resp, err := client.Get(apiURL)
 	if err != nil {
-		return fmt.Errorf("network error fetching %s: %w", url, err)
+		return nil, fmt.Errorf("network error fetching directory listing: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Check if the response is successful
 	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("file not found at %s (HTTP 404)", url)
+		return nil, fmt.Errorf("prompts directory not found in repository (HTTP 404)")
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("server error fetching %s: HTTP %d", url, resp.StatusCode)
+		return nil, fmt.Errorf("server error fetching directory listing: HTTP %d", resp.StatusCode)
 	}
 
-	// Read the response body
-	data, err := io.ReadAll(resp.Body)
+	// Read and parse the JSON response
+	var files []GitHubFile
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&files)
 	if err != nil {
-		return fmt.Errorf("failed to read response from %s: %w", url, err)
+		return nil, fmt.Errorf("failed to parse GitHub API response: %w", err)
 	}
 
-	// Validate that we got some content
-	if len(data) == 0 {
-		return fmt.Errorf("received empty file from %s", url)
+	return files, nil
+}
+
+func fetchFileContentFromGitHub(filePath, destPath string) error {
+	// Construct GitHub API URL for file content
+	const repoAPI = "https://api.github.com/repos/Hasankanso/docli/contents/"
+	fileURL := repoAPI + filePath
+
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 30 * time.Second,
 	}
 
-	// Write the data to the destination file
-	err = os.WriteFile(destPath, data, 0644)
+	// Make the HTTP request to GitHub API
+	resp, err := client.Get(fileURL)
+	if err != nil {
+		return fmt.Errorf("network error fetching %s: %w", filePath, err)
+	}
+	defer resp.Body.Close()
+
+	// Check if the response is successful
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("file not found at %s (HTTP 404)", filePath)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("server error fetching %s: HTTP %d", filePath, resp.StatusCode)
+	}
+
+	// Parse the JSON response to get file content
+	var fileContent GitHubFileContent
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&fileContent)
+	if err != nil {
+		return fmt.Errorf("failed to parse GitHub API response for %s: %w", filePath, err)
+	}
+
+	// Decode base64 content
+	decodedContent, err := base64.StdEncoding.DecodeString(fileContent.Content)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 content for %s: %w", filePath, err)
+	}
+
+	// Write the decoded content to the destination file
+	err = os.WriteFile(destPath, decodedContent, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write file %s: %w", destPath, err)
 	}
