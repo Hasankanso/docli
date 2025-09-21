@@ -32,7 +32,7 @@ jobs:
             goos: windows
             goarch: amd64
             binary_suffix: ".exe"
-            asset_name: docli-windows-amd64.exe
+            asset_name: docli-windows-amd64
           - os: macos-latest
             goos: darwin
             goarch: amd64
