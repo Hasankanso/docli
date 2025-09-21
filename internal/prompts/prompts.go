@@ -2,8 +2,11 @@ package prompts
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func CopyPromptFiles() error {
@@ -14,45 +17,18 @@ func CopyPromptFiles() error {
 		return fmt.Errorf("failed to create .github/prompts directory: %w", err)
 	}
 
-	// Get the executable path to find the source prompt files
-	execPath, err := os.Executable()
-	if err != nil {
-		return fmt.Errorf("failed to get executable path: %w", err)
-	}
-
-	// Get the directory containing the executable
-	execDir := filepath.Dir(execPath)
-
-	// Try different possible locations for the prompt files
-	var sourcePromptsDir string
-
-	// Check if we're running from the development directory
-	devPromptsDir := filepath.Join(execDir, ".github", "prompts")
-	if _, err := os.Stat(devPromptsDir); err == nil {
-		sourcePromptsDir = devPromptsDir
-	} else {
-		// Check if prompts are bundled with the executable
-		bundledPromptsDir := filepath.Join(execDir, "prompts")
-		if _, err := os.Stat(bundledPromptsDir); err == nil {
-			sourcePromptsDir = bundledPromptsDir
-		} else {
-			// Fallback: try relative to executable assuming it's in docli repo
-			fallbackPromptsDir := filepath.Join(filepath.Dir(execDir), ".github", "prompts")
-			if _, err := os.Stat(fallbackPromptsDir); err == nil {
-				sourcePromptsDir = fallbackPromptsDir
-			} else {
-				return fmt.Errorf("could not find source prompt files")
-			}
-		}
-	}
+	// GitHub repository information
+	const (
+		baseURL = "https://raw.githubusercontent.com/Hasankanso/docli/main"
+	)
 
 	// Copy syncDoc.prompt.md if it doesn't exist
 	syncDocPath := filepath.Join(promptsDir, "syncDoc.prompt.md")
 	if _, err := os.Stat(syncDocPath); os.IsNotExist(err) {
-		sourceSyncDoc := filepath.Join(sourcePromptsDir, "syncDoc.prompt.md")
-		err = copyFile(sourceSyncDoc, syncDocPath)
+		syncDocURL := baseURL + "/.github/prompts/syncDoc.prompt.md"
+		err = fetchFileFromGit(syncDocURL, syncDocPath)
 		if err != nil {
-			return fmt.Errorf("failed to copy syncDoc.prompt.md: %w", err)
+			return fmt.Errorf("failed to fetch syncDoc.prompt.md: %w", err)
 		}
 		fmt.Println("✅ Created .github/prompts/syncDoc.prompt.md")
 	}
@@ -60,10 +36,10 @@ func CopyPromptFiles() error {
 	// Copy updateDoc.prompt.md if it doesn't exist
 	updateDocPath := filepath.Join(promptsDir, "updateDoc.prompt.md")
 	if _, err := os.Stat(updateDocPath); os.IsNotExist(err) {
-		sourceUpdateDoc := filepath.Join(sourcePromptsDir, "updateDoc.prompt.md")
-		err = copyFile(sourceUpdateDoc, updateDocPath)
+		updateDocURL := baseURL + "/.github/prompts/updateDoc.prompt.md"
+		err = fetchFileFromGit(updateDocURL, updateDocPath)
 		if err != nil {
-			return fmt.Errorf("failed to copy updateDoc.prompt.md: %w", err)
+			return fmt.Errorf("failed to fetch updateDoc.prompt.md: %w", err)
 		}
 		fmt.Println("✅ Created .github/prompts/updateDoc.prompt.md")
 	}
@@ -71,15 +47,42 @@ func CopyPromptFiles() error {
 	return nil
 }
 
-func copyFile(src, dst string) error {
-	sourceData, err := os.ReadFile(src)
-	if err != nil {
-		return fmt.Errorf("failed to read source file %s: %w", src, err)
+func fetchFileFromGit(url, destPath string) error {
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 30 * time.Second,
 	}
 
-	err = os.WriteFile(dst, sourceData, 0644)
+	// Make the HTTP request
+	resp, err := client.Get(url)
 	if err != nil {
-		return fmt.Errorf("failed to write destination file %s: %w", dst, err)
+		return fmt.Errorf("network error fetching %s: %w", url, err)
+	}
+	defer resp.Body.Close()
+
+	// Check if the response is successful
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("file not found at %s (HTTP 404)", url)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("server error fetching %s: HTTP %d", url, resp.StatusCode)
+	}
+
+	// Read the response body
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response from %s: %w", url, err)
+	}
+
+	// Validate that we got some content
+	if len(data) == 0 {
+		return fmt.Errorf("received empty file from %s", url)
+	}
+
+	// Write the data to the destination file
+	err = os.WriteFile(destPath, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write file %s: %w", destPath, err)
 	}
 
 	return nil
