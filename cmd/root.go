@@ -34,9 +34,6 @@ func Execute() {
 }
 
 func init() {
-	// Add subcommands
-	RootCmd.AddCommand(versionCmd)
-	RootCmd.AddCommand(initCmd)
 
 	// Global flags
 	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")

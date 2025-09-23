@@ -1,0 +1,30 @@
+{
+  "platforms": [
+    "confluence",
+    "readme"
+  ],
+  "docmeta": [
+    {
+      "id": "y70b0wyk",
+      "name": "How to Use Docli",
+      "description": "Explain main docli commands, ignore side commands such as version, deep dive in files to find what the command really does",
+      "file_hints": [
+        "cmd",
+        "internal/docmeta",
+        "internal/spec",
+        "internal/prompts"
+      ]
+    },
+    {
+      "id": "h3000wd2p",
+      "name": "Docli Exhaustive Commands List",
+      "description": "list all available commands, flags and options, start from cmd folder and goes down to all dependency folders",
+      "file_hints": [
+        "cmd",
+        "internal/docmeta",
+        "internal/prompts",
+        "internal/spec"
+      ]
+    }
+  ]
+}

@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/Hasankanso/docli/internal/common"
 )
 
 // GitHubFile represents a file in a GitHub directory
@@ -59,7 +61,7 @@ func CopyPromptFiles() error {
 			if err != nil {
 				return fmt.Errorf("failed to fetch %s: %w", file.Name, err)
 			}
-			fmt.Printf("✅ Created .github/prompts/%s\n", file.Name)
+			common.Success("Created .github/prompts/%s", file.Name)
 		}
 	}
 
