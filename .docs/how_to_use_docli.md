@@ -1,19 +1,20 @@
 # How to Use Docli
 
-Docli is a command-line tool for setting up documentation synchronization configuration. This guide focuses on the main commands you'll use to configure your documentation projects for future synchronization with platforms like Confluence and README.
+Docli is a command-line tool for managing documentation projects with configuration-driven synchronization. This guide focuses on the main commands you'll use to configure and manage your documentation projects for future synchronization with platforms like Confluence and README.
 
 ## Overview
 
 Docli helps you:
 - Set up documentation synchronization configuration
-- Organize documentation project structure
+- Create and manage document metadata entries
+- Organize documentation project structure  
 - Define target platforms for documentation deployment
 - Manage documentation project workflows
 - **Provide AI-ready prompts for documentation generation** - Docli includes specialized prompt templates that guide AI assistants in creating and maintaining your documentation
 
 ## Documentation Prompts
 
-Docli provides specialized AI-ready prompt templates that guide documentation generation and maintenance. These prompts are automatically copied to your project's `.github/prompts/` directory during initialization:
+Docli provides specialized AI-ready prompt templates that are automatically downloaded from the official repository during initialization. These prompts are copied to your project's `.github/prompts/` directory:
 
 ### Available Prompts
 
@@ -51,11 +52,11 @@ docli init
 ```
 
 This interactive command will:
-1. Copy specialized documentation prompt files to `.github/prompts/` directory (updateDoc.prompt.md, syncDoc.prompt.md, and refineDoc.prompt.md) - these provide AI assistants with detailed instructions for generating, updating, and refining your documentation
-2. Check if a documentation configuration already exists at `.docs/spec.md` (exits if found)
+1. Download and copy specialized documentation prompt files to `.github/prompts/` directory from the official repository
+2. Check if a documentation configuration already exists at `.docs/spec.json` (exits if found)
 3. Guide you through selecting target platforms (Confluence, README)
-4. Help you configure documents with names, descriptions, and file/folder sources
-5. Create a `.docs/spec.md` file with your configuration
+4. Create initial configuration structure in both `.docs/spec.md` and `.docs/spec.json`
+5. Set up the foundation for adding document metadata
 
 #### Platform Selection
 
@@ -65,45 +66,73 @@ You can choose from:
 
 Select platforms by entering numbers separated by commas (e.g., `1,2` for both). If no input is provided, Confluence is selected by default.
 
-#### Document Configuration
+#### Initial Setup
 
-For each document, you'll provide:
-- **Title** - The name of your document
-- **Description** - What the document covers
-- **File/Folder Sources** - Where docli should look for relevant content
+The init command creates the basic structure but doesn't collect document details during initialization. Use `docli create docmeta` after initialization to add your document configurations.
+
+### Create Document Metadata
+
+After initializing your project, use the `create docmeta` command to add new document configurations:
+
+```bash
+docli create docmeta
+```
+
+This interactive command will:
+1. Prompt for document title (required)
+2. Ask for document description
+3. Collect file/folder source hints
+4. Generate a unique ID for the document
+5. Save the configuration to both `.docs/spec.md` and `.docs/spec.json`
 
 #### Example Interactive Session
 
 ```
-Welcome to docli initialization!
-This will guide you through setting up your documentation sync configuration.
-📋 Copying specialized documentation prompt files...
-✅ Documentation prompt files copied successfully to .github/prompts/!
-📋 Which platforms do you want to sync your documentation to?
-1. Confluence
-2. README
-
-Select platforms (1): 1,2
-Selected: confluence, readme
-
-📝 Now let's configure your documents:
---- Document 1 ---
-Enter title for document 1 (or press Enter to finish): API Documentation
+--- New Document Configuration ---
+Enter document title: API Documentation
 Enter description for 'API Documentation': Complete API reference with examples
 
-💡 Please provide file or folder names where we can find relevant content for 'API Documentation'.
+Please provide file or folder names where we can find relevant content for 'API Documentation'.
 You can specify multiple files/folders. Press Enter on an empty line when done.
   File/Folder 1 (or press Enter to finish): src/api/
   File/Folder 2 (or press Enter to finish): docs/api/
   File/Folder 3 (or press Enter to finish): (press Enter to finish)
 
---- Document 2 ---
-Enter title for document 2 (or press Enter to finish): (press Enter to finish)
-
-✅ Configuration saved to .docs/spec.md
-
-You can now run other docli commands to sync your documentation!
+Added 2 file/folder hint(s) for 'API Documentation'
+SUCCESS: Document metadata for 'API Documentation' added successfully
 ```
+
+### List Document Metadata
+
+View all configured documents in your project:
+
+```bash
+docli list docmeta
+```
+
+This command displays all document metadata entries in a tabular format showing:
+- Document ID (unique identifier)
+- Document name
+- Description and file hints are visible in the detailed spec.md file
+
+### Delete Document Metadata
+
+Remove a document configuration by its ID:
+
+```bash
+docli delete docmeta <document-id>
+```
+
+Examples:
+```bash
+# Delete by document ID
+docli delete docmeta cjld2cyuq0000t3rmniod1foy
+
+# If document name contains spaces, use quotes
+docli delete docmeta "cjld2cyuq0000t3rmniod1foy"
+```
+
+To find the document ID, use `docli list docmeta` first.
 
 ### Getting Help
 
@@ -140,17 +169,22 @@ docli init --verbose
 docli init --quiet
 ```
 
-## Configuration File
+## Configuration Files
 
-After running `docli init`, your configuration is stored in `.docs/spec.md`. This file contains:
+After running `docli init`, your configuration is stored in two files:
 
-- **Platforms** - Target platforms for documentation sync
-- **Documents** - Each document's name, description, and source file hints
+- **`.docs/spec.md`** - Human-readable Markdown format for documentation and review
+- **`.docs/spec.json`** - Machine-readable JSON format for internal operations
+
+Both files contain the same information: target platforms and document metadata entries with unique IDs.
 
 ### Sample Configuration
 
+**.docs/spec.md format:**
 ```markdown
 # Documentation Configuration
+
+This file contains the configuration for your documentation synchronization.
 
 ## Platforms
 
@@ -177,25 +211,64 @@ After running `docli init`, your configuration is stored in `.docs/spec.md`. Thi
 - `README.md`
 ```
 
+**.docs/spec.json format:**
+```json
+{
+  "platforms": ["confluence", "readme"],
+  "docmeta": [
+    {
+      "id": "cjld2cyuq0000t3rmniod1foy",
+      "name": "API Documentation", 
+      "description": "Complete API reference with examples",
+      "file_hints": ["src/api/", "docs/api/"]
+    },
+    {
+      "id": "cjld2cyuq0001t3rmniod1foz",
+      "name": "User Guide",
+      "description": "Step-by-step user instructions", 
+      "file_hints": ["examples/", "README.md"]
+    }
+  ]
+}
+```
+
 ## Best Practices
 
-1. **Start with init** - Always begin by running `docli init` to set up your documentation project
-2. **Organize sources** - Provide clear file/folder hints to help docli find relevant content
+1. **Start with init** - Always begin by running `docli init` to set up your documentation project structure
+2. **Add documents incrementally** - Use `docli create docmeta` to add document configurations one at a time
 3. **Use descriptive names** - Give your documents clear, descriptive titles and descriptions
-4. **Check configuration** - Review the generated `.docs/spec.md` file to ensure it matches your needs
+4. **Organize sources** - Provide clear file/folder hints to help docli find relevant content
+5. **Review regularly** - Use `docli list docmeta` to review your document configurations
+6. **Clean up when needed** - Remove outdated document metadata with `docli delete docmeta`
+7. **Check configuration** - Review the generated `.docs/spec.md` file to ensure it matches your needs
 
 ## Error Handling
 
 If you encounter issues:
 
-- **Configuration exists** - If `docli init` reports that documentation configuration already exists, you'll see a message with the path to the existing `.docs/spec.md` file. To start fresh, remove the file or entire `.docs` directory first
-- **Prompt file warnings** - If you see warnings about failing to copy prompt files, they're non-critical; the init process will continue
+- **Configuration exists** - If `docli init` reports that documentation configuration already exists, you'll see a message with the path to the existing `.docs/spec.json` file. To start fresh, remove the file or entire `.docs` directory first
+- **Prompt file errors** - If you see errors about downloading prompt files, check your internet connection; the init process will continue but prompt files won't be available
 - **Permission errors** - Ensure you have write permissions in your project directory for both `.docs` and `.github/prompts` directories  
-- **No input provided** - Docli will use sensible defaults (e.g., Confluence as default platform, empty string handling)
+- **No configuration found** - Commands like `create docmeta`, `list docmeta`, and `delete docmeta` require an existing configuration. Run `docli init` first
+- **Document not found** - When deleting document metadata, ensure you're using the correct document ID from `docli list docmeta`
+
+## Command Reference
+
+| Command | Purpose |
+|---------|---------|
+| `docli` | Show welcome message |
+| `docli init` | Initialize documentation project |
+| `docli create docmeta` | Add new document metadata |
+| `docli list docmeta` | List all document metadata |
+| `docli delete docmeta <id>` | Remove document metadata by ID |
+| `docli version` | Show version information |
 
 ## Next Steps
 
-After initializing your documentation project with `docli init`, you can:
-1. Review and edit the generated `.docs/spec.md` file
-2. Run additional docli commands to sync your documentation to the configured platforms
-3. Update your source files and re-run docli commands to keep documentation current
+After setting up your documentation project with docli:
+
+1. **Initialize**: Run `docli init` to set up the basic structure
+2. **Configure**: Add document metadata using `docli create docmeta`
+3. **Review**: Check your configuration with `docli list docmeta` and by examining `.docs/spec.md`
+4. **Use prompts**: Leverage the AI-ready prompt files in `.github/prompts/` for documentation generation
+5. **Iterate**: Add, modify, or remove document configurations as your project evolves
