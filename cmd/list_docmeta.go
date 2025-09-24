@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/Hasankanso/docli/internal/common"
 	"github.com/Hasankanso/docli/internal/docmeta"
+	"github.com/Hasankanso/docli/internal/logger"
 	"github.com/Hasankanso/docli/internal/spec"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ This command displays all configured documents with their names and descriptions
 func runListDocmeta() {
 	specRepo := spec.NewSpecRepo()
 	if !specRepo.SpecExists() {
-		common.Error("No spec.md file found. Please run 'docli init' to initialize your project")
+		logger.Error("No spec.md file found. Please run 'docli init' to initialize your project")
 		return
 	}
 	ListDocMetaCmd := docmeta.NewListDocMetaCommand(specRepo)

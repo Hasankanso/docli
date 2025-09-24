@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 
-	"github.com/Hasankanso/docli/internal/common"
 	"github.com/Hasankanso/docli/internal/docmeta"
+	"github.com/Hasankanso/docli/internal/logger"
 	"github.com/Hasankanso/docli/internal/spec"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +27,7 @@ func runCreateDocmeta() {
 	reader := bufio.NewReader(os.Stdin)
 	newDocMeta := CollectSingleDocumentDetails(reader)
 	if newDocMeta == nil {
-		common.Info("Document creation cancelled")
+		logger.Info("Document creation cancelled")
 		return
 	}
 	specRepo := spec.NewSpecRepo()
@@ -38,10 +37,10 @@ func runCreateDocmeta() {
 }
 
 func CollectSingleDocumentDetails(reader *bufio.Reader) *spec.DocMetaData {
-	fmt.Println("\n--- New Document Configuration ---")
+	logger.Info("\n--- New Document Configuration ---")
 
 	// Ask for document name
-	fmt.Print("Enter document title: ")
+	logger.Info("Enter document title: ")
 	input, _ := reader.ReadString('\n')
 	docName := strings.TrimSpace(input)
 
@@ -51,18 +50,18 @@ func CollectSingleDocumentDetails(reader *bufio.Reader) *spec.DocMetaData {
 	}
 
 	// Ask for document description
-	fmt.Printf("Enter description for '%s': ", docName)
+	logger.Info("Enter description for '%s': ", docName)
 	input, _ = reader.ReadString('\n')
 	docDescription := strings.TrimSpace(input)
 
 	// Ask for file/folder hints
-	fmt.Printf("\nPlease provide file or folder names where we can find relevant content for '%s'.\n", docName)
-	fmt.Println("You can specify multiple files/folders. Press Enter on an empty line when done.")
+	logger.Info("\nPlease provide file or folder names where we can find relevant content for '%s'.", docName)
+	logger.Info("You can specify multiple files/folders. Press Enter on an empty line when done.")
 
 	var fileHints []string
 	hintNum := 1
 	for {
-		fmt.Printf("  File/Folder %d (or press Enter to finish): ", hintNum)
+		logger.Info("  File/Folder %d (or press Enter to finish): ", hintNum)
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 
@@ -75,9 +74,9 @@ func CollectSingleDocumentDetails(reader *bufio.Reader) *spec.DocMetaData {
 	}
 
 	if len(fileHints) == 0 {
-		fmt.Printf("No file hints provided for '%s'.\n", docName)
+		logger.Info("No file hints provided for '%s'.", docName)
 	} else {
-		fmt.Printf("Added %d file/folder hint(s) for '%s'\n", len(fileHints), docName)
+		logger.Info("Added %d file/folder hint(s) for '%s'", len(fileHints), docName)
 	}
 
 	return spec.NewDocMetaData(docName, docDescription, fileHints)

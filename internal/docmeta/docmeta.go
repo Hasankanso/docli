@@ -3,7 +3,7 @@ package docmeta
 import (
 	"fmt"
 
-	"github.com/Hasankanso/docli/internal/common"
+	"github.com/Hasankanso/docli/internal/logger"
 	"github.com/Hasankanso/docli/internal/spec"
 )
 
@@ -23,18 +23,18 @@ func (cmd *CreateDocMetaCommand) Run() {
 
 	specExists := cmd.SpecRepo.SpecExists()
 	if !specExists {
-		common.Error("No documentation configuration found")
-		common.Info("Please run 'docli init' first to initialize your project")
+		logger.Error("No documentation configuration found")
+		logger.Info("Please run 'docli init' first to initialize your project")
 		return
 	}
 
 	// Save the updated configuration
 	err := cmd.SpecRepo.AddDocMeta(cmd.DocMeta)
 	if err != nil {
-		common.Fatal("Error saving configuration: %v", err)
+		logger.Fatal("Error saving configuration: %v", err)
 	}
 
-	common.Success("Document metadata for '%s' added successfully", cmd.DocMeta.Name)
+	logger.Success("Document metadata for '%s' added successfully", cmd.DocMeta.Name)
 }
 
 type DeleteDocMetaCommand struct {
@@ -52,17 +52,17 @@ func NewDeleteDocMetaCommand(NewSpecRepo *spec.SpecRepo, id string) *DeleteDocMe
 func (cmd *DeleteDocMetaCommand) Run() {
 	specExists := cmd.SpecRepo.SpecExists()
 	if !specExists {
-		common.Error("No documentation configuration found")
-		common.Info("Please run 'docli init' first to initialize your project")
+		logger.Error("No documentation configuration found")
+		logger.Info("Please run 'docli init' first to initialize your project")
 		return
 	}
 
 	// Save the updated configuration
 	err := cmd.SpecRepo.RemoveDocMeta(cmd.ID)
 	if err != nil {
-		common.Fatal("Error deleting document metadata: %v", err)
+		logger.Fatal("Error deleting document metadata: %v", err)
 	}
-	common.Success("Document metadata with ID '%s' deleted successfully", cmd.ID)
+	logger.Success("Document metadata with ID '%s' deleted successfully", cmd.ID)
 }
 
 type ListDocMetaCommand struct {
@@ -75,22 +75,22 @@ func NewListDocMetaCommand(NewSpecRepo *spec.SpecRepo) *ListDocMetaCommand {
 	}
 }
 func (cmd *ListDocMetaCommand) Run() {
-	common.Info("Listing document metadata entries")
+	logger.Info("Listing document metadata entries")
 	specExists := cmd.SpecRepo.SpecExists()
 	if !specExists {
-		common.Error("No documentation configuration found")
-		common.Info("Please run 'docli init' first to initialize your project")
+		logger.Error("No documentation configuration found")
+		logger.Info("Please run 'docli init' first to initialize your project")
 		return
 	}
 
 	// List the document metadata entries
 	docMetaList, err := cmd.SpecRepo.GetAllDocMeta()
 	if err != nil {
-		common.Fatal("Error retrieving document metadata: %v", err)
+		logger.Fatal("Error retrieving document metadata: %v", err)
 	}
 
 	if len(docMetaList) == 0 {
-		common.Info("No document metadata entries found")
+		logger.Info("No document metadata entries found")
 		return
 	}
 

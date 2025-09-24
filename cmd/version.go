@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/Hasankanso/docli/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -12,8 +11,8 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version number of docli",
 	Long:  `Display the current version of docli.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("docli v2.0.0")
-		fmt.Println("Built with Go")
+		logger.Info("docli v2.0.0")
+		logger.Info("Built with Go")
 	},
 }
 

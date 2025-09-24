@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"slices"
 	"strings"
 
-	"github.com/Hasankanso/docli/internal/common"
+	"github.com/Hasankanso/docli/internal/logger"
 	"github.com/Hasankanso/docli/internal/spec"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +24,7 @@ with platform configuration. Use 'docli create docmeta' to add document metadata
 }
 
 func runInit() {
-	common.Info("Welcome to docli initialization!")
+	logger.Info("Welcome to docli initialization!")
 
 	specRepo := spec.NewSpecRepo()
 	reader := bufio.NewReader(os.Stdin)
@@ -38,18 +37,18 @@ func runInit() {
 }
 
 func askForPlatforms(reader *bufio.Reader) []string {
-	fmt.Println("Which platforms do you want to sync your documentation to?")
-	fmt.Println("1. Confluence")
-	fmt.Println("2. README")
-	fmt.Println("\nYou can select multiple platforms by entering numbers separated by commas (e.g., 1,2)")
-	fmt.Print("Select platforms (1): ")
+	logger.Info("Which platforms do you want to sync your documentation to?")
+	logger.Info("1. Confluence")
+	logger.Info("2. README")
+	logger.Info("\nYou can select multiple platforms by entering numbers separated by commas (e.g., 1,2)")
+	logger.Info("Select platforms (1): ")
 
 	input, _ := reader.ReadString('\n')
 	input = strings.TrimSpace(input)
 
 	// Default to Confluence if no input
 	if input == "" {
-		fmt.Println("Selected: Confluence")
+		logger.Info("Selected: Confluence")
 		return []string{"confluence"}
 	}
 
@@ -73,11 +72,11 @@ func askForPlatforms(reader *bufio.Reader) []string {
 	}
 
 	if len(platforms) == 0 {
-		fmt.Println("No valid platforms selected. Defaulting to Confluence.")
+		logger.Info("No valid platforms selected. Defaulting to Confluence.")
 		return []string{"confluence"}
 	}
 
-	fmt.Printf("Selected: %s\n", strings.Join(platforms, ", "))
+	logger.Info("Selected: %s", strings.Join(platforms, ", "))
 	return platforms
 }
 
